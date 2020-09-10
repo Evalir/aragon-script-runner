@@ -1,6 +1,7 @@
 const abi = require('web3-eth-abi')
-const DISPUTABLE_DELAY_ABI = require('./abi/DisputableDelay.json')
-const TOKEN_MANAGER_ABI = require('./abi/TokenManager.json')
+const TOKEN_MANAGER_ABI = require('./abi/TokenManager.json').abi
+
+const CALLSCRIPT_ID = '0x00000001'
 
 function encodeCallsScript(actions) {
   return actions.reduce((script, { to, data }) => {
@@ -21,15 +22,12 @@ function getFunctionABI(ABI, functionName) {
   return functionABI
 }
 
-function encodeDelayedMint(tokenManager, receiver, amount, context) {
+function encodeDelayedMint(tokenManager, receiver, amount) {
   const mintABI = getFunctionABI(TOKEN_MANAGER_ABI, 'mint')
   const mintAction = abi.encodeFunctionCall(mintABI, [receiver, amount])
   const mintCallscript = encodeCallsScript([{ to: tokenManager, data: mintAction }])
 
-  const delayExecutionABI = getFunctionABI(DISPUTABLE_DELAY_ABI, 'delayExecution')
-  const delayAction = abi.encodeFunctionCall(delayExecutionABI, [mintCallscript, context])
-
-  return encodeCallsScript([{ to: disputableDelay, data: delayAction }])
+  return mintCallscript
 }
 
 module.exports = {
